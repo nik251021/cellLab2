@@ -1,47 +1,40 @@
 #include <iostream>
 #include <filesystem>
+#include <entt/entt.hpp>
 
 #include <window/window.hpp>
-#include <renderer/cells_renderer.hpp>
-
-//Test includes: 
+#include <camera/camera.hpp>
 #include <renderer/shader.hpp>
-#include <renderer/buffers.hpp>
 
-//Main game cycle and delta time
+#include <renderer/buffers.hpp> 
 
 namespace fs = std::filesystem;
 
 int main(int argc, char* argv[]) {
     window curWindow(800, 600, "Cell lab");
+    Camera camera(0.0f, 800.0f, 0.0f, 600.0f);
 
-    float vertices[] = {
-    -0.5f, -0.5f, 
-     0.5f, -0.5f, 
-     0.0f,  0.5f
-    };
+    entt::registry registry;
 
-    unsigned int indices[] = { 0, 1, 2 };
-
-    shader TestShader(fs::path("data/shaders/basic.vert"), fs::path("data/shaders/basic.frag"));
-
-    vertexArrayBuffer vao;
-    vertexBuffer vbo(vertices, sizeof(vertices), GL_STATIC_DRAW);
-    indexBuffer  ebo(indices, 3);
-
-    vao.addBuffer(vbo, 0, 2, 2 * sizeof(float), (void*)0);
+    float lastFrameTime = glfwGetTime();
 
     while (!curWindow.shouldClose()) {
+        float currentFrameTime = glfwGetTime();
+        float deltaTime = currentFrameTime - lastFrameTime;
+        lastFrameTime = currentFrameTime;
+
         curWindow.pollEvents();
 
+        // 1. Обновление логики (ECS Systems)
+        // Systems::MovementSystem(registry, deltaTime);
+        // Systems::PhysicsSystem(registry, deltaTime);
+
+        // 2. Отрисовка
         glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        TestShader.bind();
-        vao.bind();
-        ebo.bind();
-
-        glDrawElements(GL_TRIANGLES, ebo.getCount(), GL_UNSIGNED_INT, nullptr);
+        // Здесь позже будет твой RenderSystem, который берет данные из registry
+        // и рисует клетки через vao/vbo
 
         curWindow.swapBuffers();
     }
