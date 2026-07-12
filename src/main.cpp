@@ -5,6 +5,8 @@
 #include <window/window.hpp>
 #include <camera/camera.hpp>
 #include <renderer/shader.hpp>
+#include <core/world/world_settings.hpp>
+#include <core/world/world_settings_loader.hpp>
 
 #include <renderer/buffers.hpp> 
 
@@ -13,6 +15,10 @@ namespace fs = std::filesystem;
 int main(int argc, char* argv[]) {
     window curWindow(800, 600, "Cell lab");
     Camera camera(0.0f, 800.0f, 0.0f, 600.0f);
+
+    WorldSettings settings = loadSettings("data/world.json");
+
+    std::cout << "Settings loaded! Gravity: " << settings.gravity.y << std::endl;
 
     entt::registry registry;
 
