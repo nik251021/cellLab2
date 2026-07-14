@@ -13,7 +13,7 @@ public:
     ~VertexArray();
     void bind() const;
     void unbind() const;
-    void addBuffer(const VertexBuffer& vb); // Настраивает атрибут 0 (позиция)
+    void addBuffer(const VertexBuffer& vb);
     void setIndexBuffer(const IndexBuffer& ib);
     void addInstanceBuffer(const InstanceBuffer& ib);
 private:

@@ -10,13 +10,13 @@ uniform mat4 u_ViewProj;
 out float v_Type;
 out vec4 v_Color;
 
-out vec2 v_LocalPos; // Передаем координаты квадрата (-1 до 1)
+out vec2 v_LocalPos;
 
 void main() {
     v_Type = aType;
     v_Color = aColor;
 
-    v_LocalPos = aPos; // aPos у нас от -1 до 1
+    v_LocalPos = aPos;
     vec2 worldPos = aInstancePos + aPos * aInstanceRad;
     gl_Position = u_ViewProj * vec4(worldPos, 0.0, 1.0);
 }

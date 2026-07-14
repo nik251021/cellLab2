@@ -10,7 +10,6 @@ void VertexArray::unbind() const { glBindVertexArray(0); }
 void VertexArray::addBuffer(const VertexBuffer& vb) {
     bind();
     vb.bind();
-    // Настройка для простых 2D позиций (2 float'а)
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 }
@@ -26,22 +25,22 @@ void VertexArray::addInstanceBuffer(const InstanceBuffer& ib) {
 
     size_t stride = sizeof(InstanceData);
 
-    // 1. Позиция (vec2)
+    // position
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(InstanceData, position));
     glVertexAttribDivisor(1, 1);
 
-    // 2. Радиус (float)
+    // radius
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(InstanceData, radius));
     glVertexAttribDivisor(2, 1);
 
-    // 3. Тип клетки (float)
+    // cell type
     glEnableVertexAttribArray(3);
     glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(InstanceData, cellType));
     glVertexAttribDivisor(3, 1);
 
-    // 4. Цвет (vec4)
+    // color
     glEnableVertexAttribArray(4);
     glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(InstanceData, color));
     glVertexAttribDivisor(4, 1);
