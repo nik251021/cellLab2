@@ -10,6 +10,8 @@ public:
     void setPosition(glm::vec2 pos);
     void setZoom(float zoom);
 
+    glm::vec2 getPosition() const { return m_position; }
+    float getZoom() const { return m_zoom; }
 private:
     void updateProjection();
 
