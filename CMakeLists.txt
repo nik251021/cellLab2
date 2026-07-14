@@ -29,6 +29,9 @@ file(GLOB_RECURSE SOURCE_FILES
 
 add_executable(CellLab ${SOURCE_FILES})
 
-target_include_directories(CellLab PRIVATE include)
+target_include_directories(CellLab PRIVATE 
+    include
+    include/external
+)
 
 target_link_libraries(CellLab PRIVATE glfw OpenGL::GL)

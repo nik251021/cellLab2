@@ -1,0 +1,11 @@
+{
+    "Display_name": "Phagocyte",
+    "Max_radius": 1,
+    "Food_storage": 1.5,
+    "Default_color": {
+        "red": 174,
+        "green": 98,
+        "blue": 0,
+        "alpha": 0
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "Display_name": "Photocyte",
+    "Max_radius": 1,
+    "Food_storage": 1,
+    "Default_color": {
+        "red": 0,
+        "green": 255,
+        "blue": 0,
+        "alpha": 0
+    }
+}
