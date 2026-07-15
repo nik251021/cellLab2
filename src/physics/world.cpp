@@ -1,5 +1,3 @@
-#include <iostream>
-#include <ostream>
 #include <physics/world.hpp>
 #include <physics/components.hpp>
 
@@ -39,43 +37,41 @@ void onCollision(entt::entity e1, entt::entity e2) {
 
 }
 // Cells logic on methabolism
-void world::updateMetabolism(entt::entity e, Methabolism& met, float dt) {
-    std::cout << "Current atf: " << met.atf << std::endl;
-    if (met.isActive) {
-        if (met.atf > 0) {
-            met.atf -= met.atfConsumptionRate * dt;
-        } else {
-            met.isActive = false;
-        }
-    } else {
-        if (met.atf <= 0) {
-            auto& mass = m_registry.get<Mass>(e);
-            std::cout << "Current mass: " << mass.value << std::endl;
-            mass.value -= met.massConsumptionRate * dt;
-            if (mass.value <= 0) {
-                //Death
-                std::cout << "Cell is dead" << std::endl;
+void world::updateMetabolism(float dt) {
+    m_registry.view<Methabolism>().each([this, dt](auto entity, auto& met) {
+        // Локальная логика метаболизма
+        if (met.isActive) {
+            if (met.atf > 0) {
+                met.atf -= met.atfConsumptionRate * dt;
+            } else {
+                met.isActive = false;
             }
         } else {
-            met.isActive = true;
+            if (met.atf <= 0) {
+                auto& mass = m_registry.get<Mass>(entity);
+                mass.value -= met.massConsumptionRate * dt;
+                if (mass.value <= 0) {
+                    m_registry.destroy(entity);
+                }
+            } else {
+                met.isActive = true;
+            }
         }
-    }
+    });
 }
 
-void world::update(float dt) {
-    m_registry.view<Methabolism>().each([this, dt](auto entity, auto& met) {
-        this->updateMetabolism(entity, met, dt);
-    });
+void world::applyPhysicsForces(float dt) {
     m_registry.view<Velocity, Mass, Force>().each([this, dt](auto& vel, auto& mass, auto& force) {
         glm::vec2 acceleration = (force.value + glm::vec2(0.0f, curSettings.gravity * mass.value) - (vel.value * curSettings.viscosity)) / mass.value;
         
         vel.value += acceleration * dt;
-        
         vel.value *= glm::clamp(1.0f - curSettings.friction * dt, 0.0f, 1.0f);
         
         force.value = glm::vec2(0.0f); 
     });
+}
 
+void world::integratePosition(float dt) {
     auto view = m_registry.view<Position, Velocity, RenderData>();
     view.each([this, dt](auto& pos, auto& vel, auto& rd) {
         pos.value += vel.value * dt;
@@ -87,15 +83,20 @@ void world::update(float dt) {
         if (pos.value.y < 0) { pos.value.y = 0; vel.value.y *= -bounce; }
         else if (pos.value.y > curSettings.sizeY) { pos.value.y = curSettings.sizeY; vel.value.y *= -bounce; }
     });
+}
 
+void world::resolveCollisions(float dt) {
     m_grid.clear();
+    auto view = m_registry.view<Position, Velocity, RenderData>();
+    
+    // Заполняем сетку
     view.each([this](auto entity, auto& pos, auto&, auto&) {
         m_grid.add(entity, pos.value);
     });
 
+    // Обрабатываем коллизии
     view.each([this](auto entityA, auto& posA, auto& velA, auto& rdA) {
         int neighbors[9];
-
         m_grid.getNeighboringCells(posA.value, neighbors);
 
         for (int i = 0; i < 9; ++i) {
@@ -119,32 +120,35 @@ void world::update(float dt) {
 
                     auto& m1 = m_registry.get<Mass>(entityA);
                     auto& m2 = m_registry.get<Mass>(entityB);
-                    float massA = m1.value;
-                    float massB = m2.value;
-                    float totalMass = massA + massB;
+                    float totalMass = m1.value + m2.value;
 
-                    posA.value += normal * (overlap * (massB / totalMass));
-                    posB.value -= normal * (overlap * (massA / totalMass));
+                    posA.value += normal * (overlap * (m2.value / totalMass));
+                    posB.value -= normal * (overlap * (m1.value / totalMass));
                     
                     auto& velB = m_registry.get<Velocity>(entityB);
                     glm::vec2 relativeVel = velA.value - velB.value;
                     float velAlongNormal = glm::dot(relativeVel, normal);
                     
-                    if (velAlongNormal > 0) continue; 
-                    
-                    float restitution = 0.8f; 
-                    float j = -(1.0f + restitution) * velAlongNormal;
-                    j /= (1.0f / massA + 1.0f / massB);
-                    
-                    glm::vec2 impulse = j * normal;
-                    velA.value += (1.0f / massA) * impulse;
-                    velB.value -= (1.0f / massB) * impulse;
-
-                    onCollision(entityA, entityB);
+                    if (velAlongNormal < 0) {
+                        float restitution = 0.8f; 
+                        float j = -(1.0f + restitution) * velAlongNormal;
+                        j /= (1.0f / m1.value + 1.0f / m2.value);
+                        
+                        glm::vec2 impulse = j * normal;
+                        velA.value += (1.0f / m1.value) * impulse;
+                        velB.value -= (1.0f / m2.value) * impulse;
+                    }
                 }
             }
         }
     });
+}
+
+void world::update(float dt) {
+    updateMetabolism(dt);
+    applyPhysicsForces(dt);
+    integratePosition(dt);
+    resolveCollisions(dt);
 }
 
 void world::prepareRenderer(RenderBridge& rb) {
