@@ -49,7 +49,10 @@ private:
 public:
     world(std::string worldName);
     void loadCellConfigs(const std::vector<std::string>& filePaths);
+    
     void spawnCell(const std::string& type, glm::vec2 pos, glm::vec2 vel, glm::vec4 color);
+    void spawnTestColony();
+    
     void update(float dt);
     void prepareRenderer(RenderBridge& rb);
 };

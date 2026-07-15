@@ -5,6 +5,7 @@ world::world(std::string name) {
     this->curSettings = getWorldSettings(name);
 
     loadCellConfigs({ "data/configs/phagocyte.json", "data/configs/photocyte.json"});
+    spawnTestColony();
 }
 
 void world::spawnCell(const std::string& type, glm::vec2 pos, glm::vec2 vel, glm::vec4 color) {
@@ -27,6 +28,22 @@ void world::spawnCell(const std::string& type, glm::vec2 pos, glm::vec2 vel, glm
     
     m_registry.emplace<Methabolism>(entity, met);
     m_registry.emplace<RenderData>(entity, color, t.maxRadius, t.typeId);
+}
+
+void world::spawnTestColony() {
+    spawnCell("Phagocyte", glm::vec2(250, 250), glm::vec2(0,0), glm::vec4(0.1, 0.1, 0.1, 0));
+    spawnCell("Phagocyte", glm::vec2(300, 250), glm::vec2(0,0), glm::vec4(0.5, 0.1, 0.1, 0));
+
+    auto view = m_registry.view<Position>();
+    std::vector<entt::entity> cells;
+    for(auto entity : view) {
+        cells.push_back(entity);
+    }
+    
+    if (cells.size() >= 2) {
+        auto adjEntity = m_registry.create();
+        m_registry.emplace<Adhesion>(adjEntity, cells[0], cells[1], 60.0f, 150.0f, 50.0f);
+    }
 }
 
 bool tryToSplit() {
