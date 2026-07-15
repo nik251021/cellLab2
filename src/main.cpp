@@ -2,13 +2,13 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
+#include "glm/core/type.hpp"
 #include "rendering/window.hpp"
 #include "rendering/camera.hpp"
 #include "rendering/renderer.hpp"
 
 #include "physics/worldApi.hpp"
 
-//test includes:
 #include "bridge/renderBridge.hpp"
 
 void handleCameraInput(Camera& camera, GLFWwindow* window, float dt) {
@@ -50,10 +50,11 @@ int main() {
     glfwSetScrollCallback(window.getNativeWindow(), scroll_callback);
 
     Renderer renderer;
-    RenderBridge renderBridge;
+    RenderBridge renderBridge(renderer);
     worldApi world;
 
-    world.spawnCell(250, 0, 1, 1);
+    world.spawnCell("Phagocyte", 450, 500, 10, 0, glm::vec4(0.5,0.2,0.2,0));
+    world.spawnCell("Photocyte", 500, 500, -10, 0, glm::vec4(0,0.5,0,0));
 
     while (!window.shouldClose()) {
         //delta time
@@ -61,15 +62,16 @@ int main() {
         float deltaTime = currentTime - lastTime;
         lastTime = currentTime;
         //
-        handleCameraInput(camera, window.getNativeWindow(), deltaTime);
+        renderBridge.clear();
 
         world.update(deltaTime, renderBridge);
 
         renderer.beginScene(camera);
+        renderer.drawRect(glm::vec2(0, 0), glm::vec2(1000, 1000), glm::vec4(1.0f));
         renderer.drawCells(renderBridge.getQueue());
         renderer.endScene();
 
-        renderBridge.clear();
+        handleCameraInput(camera, window.getNativeWindow(), deltaTime);
 
         window.swapBuffers();
         window.pollEvents();

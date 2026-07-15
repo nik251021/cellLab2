@@ -17,6 +17,7 @@ public:
     void beginScene(const Camera& camera);
     
     void drawCells(const std::vector<InstanceData>& cells);
+    void drawRect(glm::vec2 pos, glm::vec2 size, glm::vec4 color);
 
     void endScene();
 

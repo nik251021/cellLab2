@@ -1,11 +1,21 @@
 {
     "Display_name": "Phagocyte",
-    "Max_radius": 1,
+    "Max_radius": 5,
+    "Default_mass": 5,
     "Food_storage": 1.5,
+    "typeid": 0,
+
+    "Metabolism": {
+        "maxAtf": 200.0,
+        "atfConsumptionRate": 0.5,
+        "massConsumptionRate": 0.1
+    },
+
     "Default_color": {
         "red": 174,
         "green": 98,
         "blue": 0,
         "alpha": 0
-    }
+    },
+    "Max_collision strength": 10000
 }

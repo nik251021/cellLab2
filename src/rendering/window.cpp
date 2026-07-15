@@ -1,6 +1,5 @@
 #include "rendering/window.hpp"
 #include <stdexcept>
-#include <iostream>
 
 Window::Window(int width, int height, const std::string& title)
     : m_width(width), m_height(height) {

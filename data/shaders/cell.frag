@@ -20,6 +20,13 @@ void main() {
     vec3 shapeColor = v_Color.rgb;
     
     switch(type) {
+        case -1:
+            float edge = max(abs(v_LocalPos.x), abs(v_LocalPos.y));
+            if (edge < 0.95) discard;
+            alpha = 1.0;
+            shapeColor = v_Color.rgb;
+            break;
+
         case 0:
             if (dist > 1.0) discard;
             alpha = 1.0 - smoothstep(0.95, 1.0, dist);

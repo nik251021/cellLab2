@@ -46,6 +46,15 @@ void Renderer::drawCells(const std::vector<InstanceData>& cells) {
     glDrawElementsInstanced(GL_TRIANGLES, m_ebo->getCount(), GL_UNSIGNED_INT, nullptr, cells.size());
 }
 
+void Renderer::drawRect(glm::vec2 pos, glm::vec2 size, glm::vec4 color) {
+    InstanceData frame(pos + size * 0.5f, size.x * 0.5f, -99.0f, color);
+
+    m_instanceBuffer->updateData(&frame, sizeof(InstanceData));
+    
+    m_vao->bind();
+    glDrawArrays(GL_LINE_LOOP, 0, 4); 
+}
+
 void Renderer::endScene() {
 
 }
