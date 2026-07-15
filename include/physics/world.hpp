@@ -42,6 +42,7 @@ private:
     entt::registry m_registry;
     SpatialGrid m_grid;
     void updateMetabolism(float dt);
+    void updateAdhesion(float dt);
     void applyPhysicsForces(float dt);
     void integratePosition(float dt);
     void resolveCollisions(float dt);

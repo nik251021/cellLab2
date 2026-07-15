@@ -1,5 +1,6 @@
 #pragma once
 #include "glm/glm.hpp"
+#include "physics/world.hpp"
 
 struct Position {
     glm::vec2 value;
@@ -30,4 +31,13 @@ struct RenderData {
     glm::vec4 color;
     float radius;
     float type;
+};
+
+struct Adhesion {
+    entt::entity cellA;
+    entt::entity cellB;
+
+    float restLength;
+    float maxLength;
+    float strength;
 };

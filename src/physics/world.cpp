@@ -60,6 +60,49 @@ void world::updateMetabolism(float dt) {
     });
 }
 
+void world::updateAdhesion(float dt) {
+    auto view = m_registry.view<Adhesion>();
+
+    view.each([this, dt](auto entity, auto& adj){
+        //Checking up cells:
+        if (!m_registry.valid(adj.cellA) || !m_registry.valid(adj.cellB)) {
+            m_registry.destroy(entity);
+            return;
+        }
+        //Physics:
+        auto& posA = m_registry.get<Position>(adj.cellA);
+        auto& posB = m_registry.get<Position>(adj.cellB);
+
+        glm::vec2 delta = posA.value - posB.value;
+        float dist = glm::length(delta);
+        //Checking length:
+        if (dist > adj.maxLength) {
+            m_registry.destroy(entity);
+            return;
+        }
+
+        glm::vec2 direction = (dist > 0.0001f) ? (delta / dist) : glm::vec2(0.0f);
+        float forceMag = adj.strength * (dist - adj.restLength);
+        glm::vec2 force = -forceMag * direction;
+
+        auto& fA = m_registry.get<Force>(adj.cellA);
+        auto& fB = m_registry.get<Force>(adj.cellB);
+        
+        fA.value += force;
+        fB.value -= force;
+        //Biology:
+        auto& metA = m_registry.get<Methabolism>(adj.cellA);
+        auto& metB = m_registry.get<Methabolism>(adj.cellB);
+        
+        float transferRate = 5.0f;
+        float diff = (metA.atf - metB.atf) * transferRate * dt;
+        
+        metA.atf -= diff;
+        metB.atf += diff;
+        //Future signals:
+    });
+}
+
 void world::applyPhysicsForces(float dt) {
     m_registry.view<Velocity, Mass, Force>().each([this, dt](auto& vel, auto& mass, auto& force) {
         glm::vec2 acceleration = (force.value + glm::vec2(0.0f, curSettings.gravity * mass.value) - (vel.value * curSettings.viscosity)) / mass.value;
@@ -146,6 +189,7 @@ void world::resolveCollisions(float dt) {
 
 void world::update(float dt) {
     updateMetabolism(dt);
+    updateAdhesion(dt);
     applyPhysicsForces(dt);
     integratePosition(dt);
     resolveCollisions(dt);
