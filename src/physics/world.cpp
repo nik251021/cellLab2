@@ -39,7 +39,7 @@ void onCollision(entt::entity e1, entt::entity e2) {
 
 }
 // Cells logic on methabolism
-void world::onMethabolismUpdate(entt::entity e, Methabolism& met, float dt) {
+void world::updateMetabolism(entt::entity e, Methabolism& met, float dt) {
     std::cout << "Current atf: " << met.atf << std::endl;
     if (met.isActive) {
         if (met.atf > 0) {
@@ -64,7 +64,7 @@ void world::onMethabolismUpdate(entt::entity e, Methabolism& met, float dt) {
 
 void world::update(float dt) {
     m_registry.view<Methabolism>().each([this, dt](auto entity, auto& met) {
-        this->onMethabolismUpdate(entity, met, dt);
+        this->updateMetabolism(entity, met, dt);
     });
     m_registry.view<Velocity, Mass, Force>().each([this, dt](auto& vel, auto& mass, auto& force) {
         glm::vec2 acceleration = (force.value + glm::vec2(0.0f, curSettings.gravity * mass.value) - (vel.value * curSettings.viscosity)) / mass.value;

@@ -42,7 +42,9 @@ private:
     worldSettings curSettings;
     entt::registry m_registry;
     SpatialGrid m_grid;
-    void onMethabolismUpdate(entt::entity e, Methabolism& met, float dt);
+    void updateMetabolism(entt::entity e, Methabolism& met, float dt);
+    void applyPhysicsForces(float dt);
+    void integratePosition(float dt);
 public:
     world(std::string worldName);
     void loadCellConfigs(const std::vector<std::string>& filePaths);
