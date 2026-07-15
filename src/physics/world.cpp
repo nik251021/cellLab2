@@ -1,3 +1,4 @@
+#include <iostream>
 #include <physics/world.hpp>
 #include <physics/components.hpp>
 
@@ -5,11 +6,10 @@ world::world(std::string name) {
     this->curSettings = getWorldSettings(name);
 
     loadCellConfigs({ "data/configs/phagocyte.json", "data/configs/photocyte.json"});
-    spawnTestColony();
 }
 
-void world::spawnCell(const std::string& type, glm::vec2 pos, glm::vec2 vel, glm::vec4 color) {
-    if (m_cellTemplates.find(type) == m_cellTemplates.end()) return;
+entt::entity world::spawnCell(const std::string& type, glm::vec2 pos, glm::vec2 vel, glm::vec4 color) {
+    if (m_cellTemplates.find(type) == m_cellTemplates.end()) return entt::null;
 
     const auto& t = m_cellTemplates[type];
     
@@ -28,22 +28,19 @@ void world::spawnCell(const std::string& type, glm::vec2 pos, glm::vec2 vel, glm
     
     m_registry.emplace<Methabolism>(entity, met);
     m_registry.emplace<RenderData>(entity, color, t.maxRadius, t.typeId);
+
+    return entity;
 }
 
-void world::spawnTestColony() {
-    spawnCell("Phagocyte", glm::vec2(250, 250), glm::vec2(0,0), glm::vec4(0.1, 0.1, 0.1, 0));
-    spawnCell("Phagocyte", glm::vec2(300, 250), glm::vec2(0,0), glm::vec4(0.5, 0.1, 0.1, 0));
+entt::entity world::makeAdhesin(entt::entity cell1, entt::entity cell2, float restLength, float maxLength, float strength) {
+    if (!m_registry.valid(cell1) || !m_registry.valid(cell2)) return entt::null;
 
-    auto view = m_registry.view<Position>();
-    std::vector<entt::entity> cells;
-    for(auto entity : view) {
-        cells.push_back(entity);
-    }
+    if (cell1 == cell2) return entt::null;
     
-    if (cells.size() >= 2) {
-        auto adjEntity = m_registry.create();
-        m_registry.emplace<Adhesion>(adjEntity, cells[0], cells[1], 60.0f, 150.0f, 50.0f);
-    }
+    auto e = m_registry.create();
+    m_registry.emplace<Adhesion>(e, cell1, cell2, restLength, maxLength, strength);
+
+    return e;
 }
 
 bool tryToSplit() {
@@ -116,6 +113,7 @@ void world::updateAdhesion(float dt) {
         
         metA.atf -= diff;
         metB.atf += diff;
+        std::cout << "Cell A ATF: " << metA.atf << " | Cell B ATF: " << metB.atf << std::endl;
         //Future signals:
     });
 }

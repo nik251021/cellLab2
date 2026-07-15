@@ -7,8 +7,8 @@
 
     "Metabolism": {
         "maxAtf": 200.0,
-        "atfConsumptionRate": 20,
-        "massConsumptionRate": 10
+        "atfConsumptionRate": 1,
+        "massConsumptionRate": 0.2
     },
 
 

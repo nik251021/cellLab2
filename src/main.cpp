@@ -53,15 +53,16 @@ int main() {
     RenderBridge renderBridge(renderer);
     worldApi world;
 
-    world.spawnCell("Phagocyte", 450, 500, 10, 0, glm::vec4(0.5,0.2,0.2,0));
-    world.spawnCell("Photocyte", 500, 500, -10, 0, glm::vec4(0,0.5,0,0));
+    uint32_t cellA = world.spawnCell("Phagocyte", 450, 500, 10, 0, glm::vec4(1.0, 0.2, 0.2, 1));
+    uint32_t cellB = world.spawnCell("Photocyte", 500, 500, -10, 0, glm::vec4(0.2, 1.0, 0.2, 1));
+
+    world.createAdhesion(cellA, cellB, 50.0f, 100.0f, 500.0f);
 
     while (!window.shouldClose()) {
-        //delta time
         float currentTime = glfwGetTime();
         float deltaTime = currentTime - lastTime;
         lastTime = currentTime;
-        //
+        
         renderBridge.clear();
 
         world.update(deltaTime, renderBridge);

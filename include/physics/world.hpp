@@ -36,6 +36,7 @@ struct SpatialGrid {
 };
 
 class world {
+    friend class worldApi;
 private:
     std::unordered_map<std::string, CellTemplate> m_cellTemplates;
     worldSettings curSettings;
@@ -50,9 +51,9 @@ public:
     world(std::string worldName);
     void loadCellConfigs(const std::vector<std::string>& filePaths);
     
-    void spawnCell(const std::string& type, glm::vec2 pos, glm::vec2 vel, glm::vec4 color);
-    void spawnTestColony();
-    
+    entt::entity spawnCell(const std::string& type, glm::vec2 pos, glm::vec2 vel, glm::vec4 color);
+    entt::entity makeAdhesin(entt::entity cell1, entt::entity cell2, float restLength, float maxLength, float strength);
+
     void update(float dt);
     void prepareRenderer(RenderBridge& rb);
 };
