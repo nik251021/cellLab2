@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -53,11 +54,11 @@ int main() {
     RenderBridge renderBridge(renderer);
     worldApi world;
 
-    uint32_t cellA = world.spawnCell("Phagocyte", 450, 500, 10, 0, glm::vec4(1.0, 0.2, 0.2, 1));
-    uint32_t cellB = world.spawnCell("Photocyte", 500, 500, -10, 0, glm::vec4(0.2, 1.0, 0.2, 1));
+    uint32_t cellFromGenome = world.spawnCellFromModule("Genome1", 1, 450.0f, 500.0f);
+    world.forceSplit(cellFromGenome);
 
-    world.createAdhesion(cellA, cellB, 50.0f, 100.0f, 500.0f);
-
+    uint32_t projectile = world.spawnCell("Phagocyte", 450, 10, 0, 250, glm::vec4(1,1,1,0));
+    
     while (!window.shouldClose()) {
         float currentTime = glfwGetTime();
         float deltaTime = currentTime - lastTime;

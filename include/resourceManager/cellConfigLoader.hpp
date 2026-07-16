@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <iostream>
 #include <string>
 #include <nlohmann/json.hpp>
 #include <fstream>
@@ -9,9 +10,7 @@ struct CellTemplate {
     std::string displayName;
     float maxRadius;
     float Default_mass;
-    float foodStorage;
     float typeId;
-    glm::vec4 color;
     float maxCollisionStrength;
     
     float maxAtf;
@@ -22,25 +21,24 @@ struct CellTemplate {
 inline CellTemplate loadCellTemplate(const std::string& path) {
     std::ifstream file(path);
     nlohmann::json j;
+    
+    if (!file.is_open()) {
+        std::cerr << "Can not open config file: " << path << std::endl;
+        return {}; 
+    }
     file >> j;
 
     CellTemplate t;
-    t.displayName = j["Display_name"];
-    t.maxRadius = j["Max_radius"];
-    t.Default_mass = j["Default_mass"];
-    t.foodStorage = j["Food_storage"];
-    t.typeId = j["typeid"];
-    t.maxCollisionStrength = j["Max_collision strength"];
+    t.displayName = j.value("Display_name", "Unknown");
+    t.maxRadius = j.value("Max_radius", 5.0f);
+    t.Default_mass = j.value("Default_mass", 1.0f);
+    t.typeId = j.value("typeid", 0.0f);
+    t.maxCollisionStrength = j.value("Max_collision strength", 1000.0f);
     
-    t.maxAtf = j["Metabolism"]["maxAtf"];
-    t.atfConsumptionRate = j["Metabolism"]["atfConsumptionRate"];
-    t.massConsumptionRate = j["Metabolism"]["massConsumptionRate"];
+    auto metab = j.value("Metabolism", nlohmann::json::object());
+    t.maxAtf = metab.value("maxAtf", 100.0f);
+    t.atfConsumptionRate = metab.value("atfConsumptionRate", 0.1f);
+    t.massConsumptionRate = metab.value("massConsumptionRate", 0.1f);
     
-    t.color = glm::vec4(
-        static_cast<float>(j["Default_color"]["red"]) / 255.0f,
-        static_cast<float>(j["Default_color"]["green"]) / 255.0f,
-        static_cast<float>(j["Default_color"]["blue"]) / 255.0f,
-        1.0f
-    );
     return t;
 }
