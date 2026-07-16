@@ -1,3 +1,4 @@
+#include "physics/systems/physicSystem.hpp"
 #include <iostream>
 #include <physics/world.hpp>
 #include <physics/components.hpp>
@@ -247,94 +248,12 @@ void world::updateAdhesion(float dt) {
     });
 }
 
-void world::applyPhysicsForces(float dt) {
-    m_registry.view<Velocity, Mass, Force>().each([this, dt](auto& vel, auto& mass, auto& force) {
-        glm::vec2 acceleration = (force.value + glm::vec2(0.0f, curSettings.gravity * mass.value) - (vel.value * curSettings.viscosity)) / mass.value;
-        
-        vel.value += acceleration * dt;
-        vel.value *= glm::clamp(1.0f - curSettings.friction * dt, 0.0f, 1.0f);
-        
-        force.value = glm::vec2(0.0f); 
-    });
-}
-
-void world::integratePosition(float dt) {
-    auto view = m_registry.view<Position, Velocity, RenderData>();
-    view.each([this, dt](auto& pos, auto& vel, auto& rd) {
-        pos.value += vel.value * dt;
-
-        const float bounce = 0.5f;
-        if (pos.value.x < 0) { pos.value.x = 0; vel.value.x *= -bounce; }
-        else if (pos.value.x > curSettings.sizeX) { pos.value.x = curSettings.sizeX; vel.value.x *= -bounce; }
-        
-        if (pos.value.y < 0) { pos.value.y = 0; vel.value.y *= -bounce; }
-        else if (pos.value.y > curSettings.sizeY) { pos.value.y = curSettings.sizeY; vel.value.y *= -bounce; }
-    });
-}
-
-void world::resolveCollisions(float dt) {
-    m_grid.clear();
-    auto view = m_registry.view<Position, Velocity, RenderData>();
-    
-    view.each([this](auto entity, auto& pos, auto&, auto&) {
-        m_grid.add(entity, pos.value);
-    });
-
-    view.each([this](auto entityA, auto& posA, auto& velA, auto& rdA) {
-        int neighbors[9];
-        m_grid.getNeighboringCells(posA.value, neighbors);
-
-        for (int i = 0; i < 9; ++i) {
-            auto it = m_grid.cells.find(neighbors[i]);
-            if (it == m_grid.cells.end()) continue;
-
-            for (auto entityB : it->second) {
-                if (entityA >= entityB) continue;
-
-                auto& posB = m_registry.get<Position>(entityB);
-                auto& rdB = m_registry.get<RenderData>(entityB);
-
-                glm::vec2 delta = posA.value - posB.value;
-                float distSq = glm::dot(delta, delta);
-                float minDist = rdA.radius + rdB.radius;
-
-                if (distSq < minDist * minDist && distSq > 0.000001f) {
-                    float dist = std::sqrt(distSq);
-                    glm::vec2 normal = delta / dist;
-                    float overlap = minDist - dist;
-
-                    auto& m1 = m_registry.get<Mass>(entityA);
-                    auto& m2 = m_registry.get<Mass>(entityB);
-                    float totalMass = m1.value + m2.value;
-
-                    posA.value += normal * (overlap * (m2.value / totalMass));
-                    posB.value -= normal * (overlap * (m1.value / totalMass));
-                    
-                    auto& velB = m_registry.get<Velocity>(entityB);
-                    glm::vec2 relativeVel = velA.value - velB.value;
-                    float velAlongNormal = glm::dot(relativeVel, normal);
-                    
-                    if (velAlongNormal < 0) {
-                        float restitution = 0.8f; 
-                        float j = -(1.0f + restitution) * velAlongNormal;
-                        j /= (1.0f / m1.value + 1.0f / m2.value);
-                        
-                        glm::vec2 impulse = j * normal;
-                        velA.value += (1.0f / m1.value) * impulse;
-                        velB.value -= (1.0f / m2.value) * impulse;
-                    }
-                }
-            }
-        }
-    });
-}
-
 void world::update(float dt) {
     updateMetabolism(dt);
     updateAdhesion(dt);
-    applyPhysicsForces(dt);
-    integratePosition(dt);
-    resolveCollisions(dt);
+
+    PhysicsSystem::update(m_registry, curSettings, dt);
+
     updateDivision(dt);
 }
 
