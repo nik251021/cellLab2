@@ -1,3 +1,4 @@
+#include "physics/systems/biologicalSystem.hpp"
 #include "physics/systems/physicSystem.hpp"
 #include <iostream>
 #include <physics/world.hpp>
@@ -176,84 +177,11 @@ void onCollision(entt::entity e1, entt::entity e2) {
 
 }
 
-void world::updateMetabolism(float dt) {
-    m_registry.view<Methabolism>().each([this, dt](auto entity, auto& met) {
-        if (met.isActive) {
-            if (met.atf > 0) {
-                met.atf -= met.atfConsumptionRate * dt;
-            } else {
-                met.isActive = false;
-            }
-        } else {
-            if (met.atf <= 0) {
-                auto& mass = m_registry.get<Mass>(entity);
-                mass.value -= met.massConsumptionRate * dt;
-                if (mass.value <= 0) {
-                    m_registry.destroy(entity);
-                }
-            } else {
-                met.isActive = true;
-            }
-        }
-    });
-}
 
-void world::updateAdhesion(float dt) {
-    auto view = m_registry.view<Adhesion>();
-
-    view.each([this, dt](auto entity, auto& adj){
-        if (!m_registry.valid(adj.cellA) || !m_registry.valid(adj.cellB)) {
-            m_registry.destroy(entity);
-            return;
-        }
-
-        auto& posA = m_registry.get<Position>(adj.cellA);
-        auto& posB = m_registry.get<Position>(adj.cellB);
-        auto& velA = m_registry.get<Velocity>(adj.cellA);
-        auto& velB = m_registry.get<Velocity>(adj.cellB);
-
-        glm::vec2 delta = posA.value - posB.value;
-        float dist = glm::length(delta);
-
-        if (dist > adj.maxLength) {
-            m_registry.destroy(entity);
-            return;
-        }
-
-        glm::vec2 direction = (dist > 0.0001f) ? (delta / dist) : glm::vec2(0.0f);
-
-        float springForce = adj.strength * (dist - adj.restLength);
-
-        glm::vec2 relativeVel = velA.value - velB.value;
-        float dampingFactor = 10.0f;
-        float dampingForce = glm::dot(relativeVel, direction) * dampingFactor;
-
-        float totalForceMag = springForce + dampingForce;
-        glm::vec2 force = -totalForceMag * direction;
-
-        auto& fA = m_registry.get<Force>(adj.cellA);
-        auto& fB = m_registry.get<Force>(adj.cellB);
-        
-        fA.value += force;
-        fB.value -= force;
-
-        auto& metA = m_registry.get<Methabolism>(adj.cellA);
-        auto& metB = m_registry.get<Methabolism>(adj.cellB);
-        
-        float transferRate = 5.0f;
-        float diff = (metA.atf - metB.atf) * transferRate * dt;
-        
-        metA.atf -= diff;
-        metB.atf += diff;
-    });
-}
 
 void world::update(float dt) {
-    updateMetabolism(dt);
-    updateAdhesion(dt);
-
     PhysicsSystem::update(m_registry, curSettings, dt);
-
+    BiologicalSystem::update(m_registry, dt);
     updateDivision(dt);
 }
 

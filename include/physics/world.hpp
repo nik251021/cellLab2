@@ -10,6 +10,7 @@
 #include <resourceManager/cellConfigLoader.hpp>
 
 #include <physics/systems/physicSystem.hpp>
+#include <physics/systems/biologicalSystem.hpp>
 
 class world {
     friend class worldApi;
@@ -19,8 +20,6 @@ private:
     entt::registry m_registry;
     GenomeRegistry& m_genomeRegistry;
 
-    void updateMetabolism(float dt);
-    void updateAdhesion(float dt);
     void updateDivision(float dt);
     void transferAdhesions(entt::entity oldParent, const std::vector<entt::entity>& children);
 public:
