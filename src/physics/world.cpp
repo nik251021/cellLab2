@@ -1,4 +1,5 @@
 #include "physics/systems/biologicalSystem.hpp"
+#include "physics/systems/genomeSystem.hpp"
 #include "physics/systems/physicSystem.hpp"
 #include <iostream>
 #include <physics/world.hpp>
@@ -82,87 +83,6 @@ entt::entity world::spawnCellFromModule(const std::string& genomeName, int modul
     return entity;
 }
 
-void world::forceSplit(entt::entity parent) {
-    if (!m_registry.all_of<GenomeComponent, Position, Mass, SplitComponent>(parent)) return;
-
-    auto& gen = m_registry.get<GenomeComponent>(parent);
-    auto& pos = m_registry.get<Position>(parent);
-    auto& mass = m_registry.get<Mass>(parent);
-    auto& split = m_registry.get<SplitComponent>(parent);
-
-    const auto& mod = m_genomeRegistry.getModule(gen.genomeName, gen.currentModuleIndex);
-    if (mod.childs.empty()) return;
-
-    float newMass = mass.value / 2.0f;
-    std::vector<entt::entity> children;
-
-    float angleRad = glm::radians(mod.params.count("split_angle") ? mod.params.at("split_angle") : 0.0f);
-    
-    glm::vec2 baseDir = glm::vec2(cos(angleRad), sin(angleRad));
-
-    for (auto const& [key, nextModuleIndex] : mod.childs) {
-        glm::vec2 direction = (key == "child1") ? baseDir : -baseDir;
-        glm::vec2 offset = direction * 7.5f; 
-
-        auto child = spawnCellFromModule(gen.genomeName, nextModuleIndex, pos.value + offset);
-
-        if (child != entt::null) {
-            m_registry.get<Mass>(child).value = newMass;
-            children.push_back(child);
-        }
-    }
-
-    if (!children.empty()) {
-        transferAdhesions(parent, children);
-    }
-
-    if (split.makeAdhesin && children.size() >= 2) {
-        makeAdhesin(children[0], children[1], 10.0f, 30.0f, 50.0f);
-    }
-
-    m_registry.destroy(parent);
-}
-
-void world::updateDivision(float dt) {
-    std::vector<entt::entity> toSplit;
-
-    m_registry.view<Mass, SplitComponent>().each([&](auto entity, auto& mass, auto& split) {
-        if (mass.value >= split.splitMass) {
-            toSplit.push_back(entity);
-        }
-    });
-
-    for (auto e : toSplit) {
-        if (m_registry.valid(e)) {
-            forceSplit(e);
-        }
-    }
-}
-
-void world::transferAdhesions(entt::entity oldParent, const std::vector<entt::entity>& children) {
-    auto view = m_registry.view<Adhesion>();
-    
-    std::vector<Adhesion> newAdhesions;
-
-    for (auto entity : view) {
-        auto& adj = view.get<Adhesion>(entity);
-        
-        if (adj.cellA == oldParent || adj.cellB == oldParent) {
-            entt::entity partner = (adj.cellA == oldParent) ? adj.cellB : adj.cellA;
-
-            for (auto child : children) {
-                newAdhesions.push_back({child, partner, adj.restLength, adj.maxLength, adj.strength});
-            }
-            
-            m_registry.destroy(entity);
-        }
-    }
-
-    for (auto& adj : newAdhesions) {
-        makeAdhesin(adj.cellA, adj.cellB, adj.restLength, adj.maxLength, adj.strength);
-    }
-}
-
 entt::entity world::makeAdhesin(entt::entity cell1, entt::entity cell2, float restLength, float maxLength, float strength) {
     if (!m_registry.valid(cell1) || !m_registry.valid(cell2)) return entt::null;
 
@@ -182,7 +102,7 @@ void onCollision(entt::entity e1, entt::entity e2) {
 void world::update(float dt) {
     PhysicsSystem::update(m_registry, curSettings, dt);
     BiologicalSystem::update(m_registry, dt);
-    updateDivision(dt);
+    GenomeSystem::update(*this, m_registry, m_genomeRegistry, dt);
 }
 
 void world::prepareRenderer(RenderBridge& rb) {

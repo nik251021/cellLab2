@@ -55,7 +55,6 @@ int main() {
     worldApi world;
 
     uint32_t cellFromGenome = world.spawnCellFromModule("Genome1", 1, 450.0f, 500.0f);
-    world.forceSplit(cellFromGenome);
 
     uint32_t projectile = world.spawnCell("Phagocyte", 450, 10, 0, 250, glm::vec4(1,1,1,0));
     

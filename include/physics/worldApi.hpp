@@ -41,10 +41,6 @@ public:
         );
     }
 
-    void forceSplit(uint32_t cellId) {
-        curWorld.forceSplit(static_cast<entt::entity>(cellId));
-    }
-
     uint32_t createAdhesion(uint32_t id1, uint32_t id2, float rest, float max, float strength) {
         return (uint32_t)curWorld.makeAdhesin((entt::entity)id1, (entt::entity)id2, rest, max, strength);
     }
